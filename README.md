@@ -46,6 +46,7 @@ Starter for Flask + Google App Engine based applications.
   $ gcloud components remove <component-id>
   $ gcloud components update
   ```
+- Add Google App Engine SDK to your `PYTHONPATH`
 
 
 
