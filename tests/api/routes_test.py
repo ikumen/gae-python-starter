@@ -21,7 +21,6 @@ class TestApiRoutes(BaseTestCase):
     def test_api_should_return_list_of_users(self, app, client, with_users):
         """Test should return list of users.
         """
-        print('=============')
         resp = client.get('/api/users', headers=self.make_headers())
 
         # make sure we have expected response
