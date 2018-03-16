@@ -14,9 +14,9 @@ class GAEDataStoreConfiguration(Configuration):
         if len(unresolved) > 0:
             msg = 'Unresolved settings: {}'.format(unresolved)
             warning_msg = '''
-            \n***************************************************************************\n
+            \n***************************************************************************
             \n{}
-            \n\n***************************************************************************
+            \n***************************************************************************
             '''.format(msg)
             logging.warn(warning_msg)
             if not self.ignore_errors:
