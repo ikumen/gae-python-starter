@@ -26,7 +26,7 @@ class OAuthClientFactory(object):
         for n in module_names:
             module = importlib.import_module('.{}'.format(os.path.basename(n)[:-3]), __name__)
             for name, obj in inspect.getmembers(module):
-                if inspect.isclass(obj) and issubclass(obj, OAuth2Client):
+                if inspect.isclass(obj) and issubclass(obj, OAuth2Client) and obj is not OAuth2Client:
                     self._register_client(name[:-6].lower(), obj)
 
     def _register_client(self, provider_id, client_class):
