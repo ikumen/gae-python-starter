@@ -4,8 +4,11 @@ import importlib
 from flask import Flask, Blueprint
 from flask.json import JSONEncoder
 from .helpers import JSONSerializableEncoder
+from .config import load_settings, GAEDataStoreConfiguration
+from .security import oauth_factory
 from . import models
 from . import settings
+
 
 
 def _register_blueprints(app, pkg_name, pkg_path):
@@ -23,7 +26,7 @@ def _register_blueprints(app, pkg_name, pkg_path):
                 app.register_blueprint(item)
 
 
-def create_app(pkg_name, pkg_path, settings_override=None):
+def create_app(pkg_name, pkg_path, override_settings=None):
     """Return a basic Flask application instance configured with defaults.
 
     @param pkg_name name of package
@@ -31,12 +34,19 @@ def create_app(pkg_name, pkg_path, settings_override=None):
     @param settings_override dictionary of settings
     """ 
     app = Flask(pkg_name)
-
-    app.config.from_object(settings) # loads the default settings
-    app.config.from_object(settings_override) # optional overrides
-    app.config.from_pyfile('local.settings', silent=True) # environment specific overrides
-    
+    # custom json encoder
     app.json_encoder = JSONSerializableEncoder
+    # initialize database and bootstrap any data
+    init_db(app)
+    # initialize and load config settings
+    load_settings(app, GAEDataStoreConfiguration, override_settings=override_settings)
+    # initialize security
+    oauth_factory.init(app.config)
+    # register blueprint modules
     _register_blueprints(app, pkg_name, pkg_path)
 
     return app
+
+
+def init_db(app):
+    pass

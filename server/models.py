@@ -71,8 +71,16 @@ class AbstractModel(JSONSerializable, ndb.Model):
         return query.fetch(limit)
 
     @classmethod
-    def get(cls, key):
-        """Returns instance of implementing class identified by given key.
+    def count(cls, parent_key=None):
+        """Returns a count of all instances for implementing class.
+
+        @param parent_key optional ancestor key to filter by
+        """
+        return cls.query().count() if parent_key is None else cls.query(ancestor=ndb.Key(urlsafe=parent_key))
+
+    @classmethod
+    def get_by_key(cls, key):
+        """Returns instance of implementing class identified by given urlsafe key.
         Key should be in urlsafe format, see:
         https://cloud.google.com/appengine/docs/python/ndb/creating-entities#Python_retrieving_entities
 
@@ -80,6 +88,17 @@ class AbstractModel(JSONSerializable, ndb.Model):
         """
         try:
             return ndb.Key(urlsafe=key).get()
+        except ProtocolBufferDecodeError:
+            return None
+
+    @classmethod
+    def get_by_id(cls, id):
+        """Returns instance of implementing class identified by given id.
+        
+        @param id identifier
+        """
+        try:
+            return ndb.Key(cls, id).get()
         except ProtocolBufferDecodeError:
             return None
 
@@ -108,6 +127,10 @@ class AbstractModel(JSONSerializable, ndb.Model):
         rv = self.to_dict()
         rv['key'] = self.key.urlsafe()
         return rv
+
+
+class Setting(AbstractModel):
+    value = ndb.StringProperty()
 
 
 class User(AbstractModel):
