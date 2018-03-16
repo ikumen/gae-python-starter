@@ -1,73 +1,23 @@
-import glob
-import importlib
-import inspect
-import logging
-import os
+import jwt
 
-from ..core import OAuth2Client, OAuthClientException
+from ..core import OAuth2Client, UnauthorizedException
 
-
-__all__ = ['OAuthClientFactory']
-
-
-class OAuthClientFactory(object):
-    def __init__(self):
-        self.clients = {}
-        self.config = {}
-
-    def init(self, config):
-        """Initialize factory with client modules.
-
-        @param config OAuth settings
+class GoogleClient(OAuth2Client):
+    """OAuthClient implementation that interacts with Google OAuth services.
+    """
+    def parse_token_response(self, oauth_resp):
+        """Parses the OAuth response from Google and tries
+        to parse out the email and access token.
         """
-        self.config.update(config)
-
-        module_names = glob.glob('{}/{}'.format(os.path.dirname(__file__),'*_client.py'))
-        for n in module_names:
-            module = importlib.import_module('.{}'.format(os.path.basename(n)[:-3]), __name__)
-            for name, obj in inspect.getmembers(module):
-                if inspect.isclass(obj) and issubclass(obj, OAuth2Client):
-                    self._register_client(name[:-6].lower(), obj)
-
-    def _register_client(self, provider_id, client_class):
-        """Registers the OAuthClient class for the given provider
-
-        @param provider_id OAuth provider id (e.g. google)
-        @param client_class OAuthClient implementation class
-        """
-        if provider_id in self.clients:
-            logging.warn('Provider "%s" already registered!', provider_id)
-        else:
-            logging.debug('Registering: %s', provider_id)
-            self.clients[provider_id] = client_class
-
-    def _get_client(self, provider_id):
-        """Returns the OAuthClient with given provider id.
-        
-        @param provider_id OAuth provider id (e.g. google)
-        """
-        if provider_id not in self.clients:
-            raise OAuthClientException('Provider %s not found!', provider_id)
-        return self.clients[provider_id]
-
-    def _get_client_config(self, provider_id):
-        """Returns the OAuth configuration for given provider.
-        
-        @param provider_id OAuth provider if (e.g. google)
-        """
-        if provider_id not in self.config:
-            raise OAuthClientException('Provider %s config not found!', provider_id)
-        return self.config[provider_id]
-
-    def create_client(self, provider_id, token=None, state=None):
-        """Create an instance of OAuthClient for given provider.
-        
-        @param provider_id provider id (e.g. google)
-        """
-        return self._get_client(provider_id)(
-            self._get_client_config(provider_id),
-            token=token,
-            state=state)
-
-        
-
+        if oauth_resp and 'id_token' in oauth_resp:
+            userinfo = jwt.decode(oauth_resp['id_token'], verify=False)
+            if 'email' in userinfo:
+                return (userinfo['email'], dict(
+                    token_type=oauth_resp['token_type'],
+                    refresh_token=oauth_resp['refresh_token'] \
+                        if 'refresh_token' in oauth_resp else None,
+                    access_token=oauth_resp['access_token']))
+            
+        raise UnauthorizedException('Failed to parse response from provider: {}'\
+            .format(self.config.get('ID')))
+                
