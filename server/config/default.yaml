@@ -1,5 +1,20 @@
-FOO:
-BAR:
-name:
-NUM: 1
-X:
+DEBUG: TRUE
+SECRET_KEY: '1ts-uh-seakrat' 
+
+google: &google
+  NAME: Google
+  VERSION: 2.0
+  CALLBACK_URL:
+  CLIENT_KEY:
+  CLIENT_SECRET:
+  BASE_URL: https://www.googleapis.com/oauth2/v1/
+  AUTHORIZATION_URL: https://accounts.google.com/o/oauth2/auth
+  TOKEN_URL: https://accounts.google.com/o/oauth2/token
+  REFRESH_URL: https://accounts.google.com/o/oauth2/token
+  ACCESS_TYPE: offline
+  SCOPE: 
+    - "https://www.googleapis.com/auth/userinfo.email"
+    - "https://www.googleapis.com/auth/userinfo.profile"
+
+OAUTHS:
+  GOOGLE: *google

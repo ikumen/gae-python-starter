@@ -132,9 +132,15 @@ class AbstractModel(JSONSerializable, ndb.Model):
 class Setting(AbstractModel):
     value = ndb.StringProperty()
 
+class OAuth(AbstractModel):
+    source = ndb.StringProperty()
+    token = ndb.JsonProperty()
+
+class SigninOAuth(OAuth):
+    signed_in_at = ndb.DateTimeProperty()
 
 class User(AbstractModel):
     name = ndb.StringProperty()
     email = ndb.StringProperty()
     created_at = ndb.DateTimeProperty(auto_now_add=True)
-
+    signin_oauths = ndb.StructuredProperty(SigninOAuth, repeated=True)

@@ -15,7 +15,7 @@ class OAuthClientFactory(object):
         self.clients = {}
         self.config = {}
 
-    def init(self, config):
+    def init_config(self, config):
         """Initialize factory with client modules.
 
         @param config OAuth settings
