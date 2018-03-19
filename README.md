@@ -7,7 +7,7 @@ Starter for Flask + Google App Engine based applications.
 - [Google App Engine Account](https://appengine.google.com/)
 - [Google Cloud Tools](https://cloud.google.com/sdk/docs/) for deploying and managing GAE applications and SDK components
 
-### Environment Setup
+## Environment Setup
 - Using [Pyenv](https://github.com/pyenv/pyenv)
   ``` bash
   $ pyenv install 2.7.12
@@ -48,6 +48,19 @@ Starter for Flask + Google App Engine based applications.
   ```
 - Add Google App Engine SDK to your `PYTHONPATH`
 
+## Development
+- `dev_appserver.py` is the cli used for managing local GAE development
+``` bash
+$ cd <project directory>
+$ dev_appserver.py --env_var OAUTHLIB_INSECURE_TRANSPORT='1' app.yaml
+```
+  - don't run under virtualenv 
+  - OAUTHLIB_INSECURE_TRANSPORT is needed to by-pass SSL check 
 
-
+## Test
+```
+$ cd <project directory>
+$ . .venv/bin/activate
+(.venv) $ pytest -s tests
+```
 
