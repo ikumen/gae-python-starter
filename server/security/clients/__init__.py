@@ -11,6 +11,8 @@ __all__ = ['OAuthClientFactory']
 
 
 class OAuthClientFactory(object):
+    K_CLIENTS = 'CLIENTS'
+
     def __init__(self):
         self.clients = {}
         self.config = {}
@@ -20,22 +22,34 @@ class OAuthClientFactory(object):
 
         @param config OAuth settings
         """
+        # TODO: reloadable???
         self.config.update(config)
-        if 'CLIENTS' in self.config:
-            clients = {}
-            for k in self.config['CLIENTS']:
-                clients[k.lower()] = self.config['CLIENTS'][k]
-            self.config['CLIENTS'] = clients
 
+        # OAuth config are stored in YAML with uppercase provider ids (flask 
+        # config only takes upper case configs), but we'll normalize the client
+        # id values to lower case so it's consistent throughout codebase
+        if self.K_CLIENTS in config:
+            clients = {}
+            for pid in config[self.K_CLIENTS]:
+                clients[pid.lower()] = config[self.K_CLIENTS][pid]
+            self.config[self.K_CLIENTS] = clients
+
+        # TODO: encapsulate
+        # Search the security.clients folder for client implementations, load them
+        # up and get the implementing OAuthClient classes for our factory.
         module_names = glob.glob('{}/{}'.format(os.path.dirname(__file__),'*_client.py'))
         for n in module_names:
             module = importlib.import_module('.{}'.format(os.path.basename(n)[:-3]), __name__)
             for name, obj in inspect.getmembers(module):
-                provider_id = name[:-6].lower()
-                if provider_id in self.config['CLIENTS'] \
+                # OAuthClient subclasses have following name pattern *OAuthClient, let's
+                # store all the names in lower case to make it consistent throughout
+                provider_id = name[:-11].lower()
+                # Make sure we have a subclass of OAuthClient
+                if provider_id in self.config[self.K_CLIENTS] \
                   and inspect.isclass(obj) \
                   and issubclass(obj, OAuth2Client) \
                   and obj is not OAuth2Client:
+                    # Save reference of id with implementing class
                     self._register_client_class(provider_id, obj)
 
 
@@ -65,9 +79,9 @@ class OAuthClientFactory(object):
         
         @param provider_id OAuth provider if (e.g. google)
         """
-        if provider_id not in self.config['CLIENTS']:
+        if provider_id not in self.config[self.K_CLIENTS]:
             raise OAuthClientException('Provider {} config not found!'.format(provider_id))
-        return self.config['CLIENTS'][provider_id]
+        return self.config[self.K_CLIENTS][provider_id]
 
     def create_client(self, provider_id, token=None, state=None):
         """Create an instance of OAuthClient for given provider.

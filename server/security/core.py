@@ -5,14 +5,8 @@ from abc import ABCMeta, abstractmethod
 from functools import wraps
 from flask import Flask, session, jsonify
 from requests_oauthlib import OAuth2Session
+from . import Constants
 
-
-class Constants(object):
-    CLIENT_KEY = 'CLIENT_KEY'
-    CLIENT_SECRET_KEY = 'CLIENT_SECRET'
-    CALLBACK_URL_KEY = 'CALLBACK_URL'
-    TOKEN_URL_KEY = 'TOKEN_URL'
-    AUTHORIZATION_URL_KEY = 'AUTHORIZATION_URL'
 
 class UnauthorizedException(Exception):
     """Thrown when there's an unauthorized access attempt.
@@ -76,18 +70,18 @@ class OAuth2Client(OAuthClient):
     def __init__(self, config, state=None, token=None, **kwargs):
         super(OAuth2Client, self).__init__(config, state=state, token=token)
         self.session = OAuth2Session(
-                config.get(Constants.CLIENT_KEY),
+                config.get(Constants.K_OAUTH_CLIENT_ID),
                 scope=config.get('SCOPE'),
                 state=state,
                 token=token,
-                redirect_uri=config.get(Constants.CALLBACK_URL_KEY), 
+                redirect_uri=config.get(Constants.K_OAUTH_CALLBACK_URL), 
                 **kwargs)
 
     def authorize(self, **kwargs):
         """Starts an OAuth2 specific authorization dance.
         """
         return self.session.authorization_url(
-            self.config.get(Constants.AUTHORIZATION_URL_KEY),
+            self.config.get(Constants.K_OAUTH_AUTH_URL),
             access_type=self.config.get('ACCESS_TYPE', None),
             approval_prompt='force',
             include_granted_scopes='true')
@@ -96,8 +90,8 @@ class OAuth2Client(OAuthClient):
         """Fetch the OAuth tokens from configured provider.
         """
         return self.session.fetch_token(
-            self.config.get(Constants.TOKEN_URL_KEY),
-            client_secret=self.config.get(Constants.CLIENT_SECRET_KEY),
+            self.config.get(Constants.K_OAUTH_TOKEN_URL),
+            client_secret=self.config.get(Constants.K_OAUTH_CLIENT_SECRET),
             authorization_response=oauth_resp)
 
     def post_construct(self, **kwargs):

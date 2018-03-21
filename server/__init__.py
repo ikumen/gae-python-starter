@@ -34,23 +34,18 @@ def create_app(pkg_name, pkg_path, override_settings=None):
     @param settings_override dictionary of settings
     """ 
     app = Flask(pkg_name)
-
     # custom json encoder
     app.json_encoder = JSONSerializableEncoder
-
     # initialize database and bootstrap any data
     init_db(app)
-
     # initialize and load config settings
     load_settings(app, GAEDataStoreConfiguration, override_settings=override_settings)
-
     # initialize security
     init_security(app)
-    
     # register blueprint modules
     _register_blueprints(app, pkg_name, pkg_path)
-
     return app
+
 
 def init_security(app):
     """Configures application security.
