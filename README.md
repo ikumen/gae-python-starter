@@ -52,10 +52,13 @@ Starter for Flask + Google App Engine based applications.
 - `dev_appserver.py` is the cli used for managing local GAE development
 ``` bash
 $ cd <project directory>
-$ dev_appserver.py --env_var OAUTHLIB_INSECURE_TRANSPORT='1' app.yaml
+$ dev_appserver.py \
+  --env_var OAUTHLIB_INSECURE_TRANSPORT=1 \ # allow non-HTTPS transport (don't do this in production)
+  --env_var OAUTHLIB_RELAX_TOKEN_SCOPE=1 \  # allow OAuth provider changing scopes (which Google does)
+  app.yaml
 ```
-  - don't run under virtualenv 
-  - OAUTHLIB_INSECURE_TRANSPORT is needed to by-pass SSL check 
+_Note: Don't run this under virtualenv_
+ 
 
 ## Test
 ```

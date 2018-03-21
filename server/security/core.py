@@ -33,6 +33,7 @@ class OAuthClient(object):
 
     def __init__(self, config, **kwargs):
         self.config = config
+        self.token = kwargs.get('token')
         self.post_construct(**kwargs)
 
     @abstractmethod
@@ -64,7 +65,7 @@ class OAuthClient(object):
 
     def version(self):
         """Returns the OAuth version."""
-        return self.config.get('VER')
+        return self.config.get('VERSION')
 
 
 class OAuth2Client(OAuthClient):
@@ -72,15 +73,15 @@ class OAuth2Client(OAuthClient):
     Actual work is done by OAuth2Session.
     """
 
-    def __init__(self, config, **kwargs):
-        super(OAuth2Client, self).__init__(config, **kwargs)
+    def __init__(self, config, state=None, token=None, **kwargs):
+        super(OAuth2Client, self).__init__(config, state=state, token=token)
         self.session = OAuth2Session(
-            config.get(Constants.CLIENT_KEY),
-            scope=config.get('SCOPE'),
-            state=kwargs.get('state'),
-            token=kwargs.get('token'),
-            redirect_uri=config.get(Constants.CALLBACK_URL_KEY),
-            **kwargs)
+                config.get(Constants.CLIENT_KEY),
+                scope=config.get('SCOPE'),
+                state=state,
+                token=token,
+                redirect_uri=config.get(Constants.CALLBACK_URL_KEY), 
+                **kwargs)
 
     def authorize(self, **kwargs):
         """Starts an OAuth2 specific authorization dance.
@@ -98,3 +99,6 @@ class OAuth2Client(OAuthClient):
             self.config.get(Constants.TOKEN_URL_KEY),
             client_secret=self.config.get(Constants.CLIENT_SECRET_KEY),
             authorization_response=oauth_resp)
+
+    def post_construct(self, **kwargs):
+        pass

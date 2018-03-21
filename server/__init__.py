@@ -1,5 +1,6 @@
-import pkgutil
 import importlib
+import os
+import pkgutil
 
 from flask import Flask, Blueprint
 from flask.json import JSONEncoder
@@ -7,7 +8,6 @@ from .helpers import JSONSerializableEncoder
 from .config import load_settings, GAEDataStoreConfiguration
 from .security import oauth_factory
 from . import models
-from . import settings
 from . import constants
 
 
@@ -45,14 +45,19 @@ def create_app(pkg_name, pkg_path, override_settings=None):
     load_settings(app, GAEDataStoreConfiguration, override_settings=override_settings)
 
     # initialize security
-    if constants.OAUTHS_KEY not in app.config:
-        raise RuntimeError('{} configuration missing!'.format(constants.OAUTHS_KEY))
-    oauth_factory.init_config(app.config[constants.OAUTHS_KEY])
-
+    init_security(app)
+    
     # register blueprint modules
     _register_blueprints(app, pkg_name, pkg_path)
 
     return app
+
+def init_security(app):
+    """Configures application security.
+    """
+    if 'OAUTH' not in app.config:
+        raise RuntimeError('{} configuration missing!'.format('OAUTH'))
+    oauth_factory.init_config(app.config['OAUTH'])
 
 
 def init_db(app):

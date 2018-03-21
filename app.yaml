@@ -8,6 +8,10 @@ handlers:
 - url: /.*
   script: run.app
 
+libraries:
+- name: ssl
+  version: latest
+    
 skip_files:
 - ^(.*/)?.*/assets/.*$
 - ^(.*/)?.*/build/.*$

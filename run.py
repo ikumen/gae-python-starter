@@ -1,6 +1,8 @@
 from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
 
-from server import api
+from server import api, frontend
 
-app = DispatcherMiddleware(api.create_app())
+app = DispatcherMiddleware(frontend.create_app(), {
+        '/api': api.create_app()
+    })

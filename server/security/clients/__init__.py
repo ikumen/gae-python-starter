@@ -21,15 +21,25 @@ class OAuthClientFactory(object):
         @param config OAuth settings
         """
         self.config.update(config)
+        if 'CLIENTS' in self.config:
+            clients = {}
+            for k in self.config['CLIENTS']:
+                clients[k.lower()] = self.config['CLIENTS'][k]
+            self.config['CLIENTS'] = clients
 
         module_names = glob.glob('{}/{}'.format(os.path.dirname(__file__),'*_client.py'))
         for n in module_names:
             module = importlib.import_module('.{}'.format(os.path.basename(n)[:-3]), __name__)
             for name, obj in inspect.getmembers(module):
-                if inspect.isclass(obj) and issubclass(obj, OAuth2Client) and obj is not OAuth2Client:
-                    self._register_client(name[:-6].lower(), obj)
+                provider_id = name[:-6].lower()
+                if provider_id in self.config['CLIENTS'] \
+                  and inspect.isclass(obj) \
+                  and issubclass(obj, OAuth2Client) \
+                  and obj is not OAuth2Client:
+                    self._register_client_class(provider_id, obj)
 
-    def _register_client(self, provider_id, client_class):
+
+    def _register_client_class(self, provider_id, client_class):
         """Registers the OAuthClient class for the given provider
 
         @param provider_id OAuth provider id (e.g. google)
@@ -41,7 +51,7 @@ class OAuthClientFactory(object):
             logging.debug('Registering: %s', provider_id)
             self.clients[provider_id] = client_class
 
-    def _get_client(self, provider_id):
+    def _get_client_class(self, provider_id):
         """Returns the OAuthClient with given provider id.
         
         @param provider_id OAuth provider id (e.g. google)
@@ -55,19 +65,17 @@ class OAuthClientFactory(object):
         
         @param provider_id OAuth provider if (e.g. google)
         """
-        if provider_id not in self.config:
-            raise OAuthClientException('Provider %s config not found!', provider_id)
-        return self.config[provider_id]
+        if provider_id not in self.config['CLIENTS']:
+            raise OAuthClientException('Provider {} config not found!'.format(provider_id))
+        return self.config['CLIENTS'][provider_id]
 
     def create_client(self, provider_id, token=None, state=None):
         """Create an instance of OAuthClient for given provider.
         
         @param provider_id provider id (e.g. google)
         """
-        return self._get_client(provider_id)(
-            self._get_client_config(provider_id),
-            token=token,
-            state=state)
+        cls = self._get_client_class(provider_id)
+        return cls(self._get_client_config(provider_id),token=token, state=state)
 
         
 

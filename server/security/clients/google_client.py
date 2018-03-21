@@ -14,8 +14,7 @@ class GoogleClient(OAuth2Client):
             if 'email' in userinfo:
                 return (userinfo['email'], dict(
                     token_type=oauth_resp['token_type'],
-                    refresh_token=oauth_resp['refresh_token'] \
-                        if 'refresh_token' in oauth_resp else None,
+                    refresh_token=oauth_resp['refresh_token'] if 'refresh_token' in oauth_resp else None,
                     access_token=oauth_resp['access_token']))
             
         raise UnauthorizedException('Failed to parse response from provider: {}'\
