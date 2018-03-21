@@ -5,7 +5,7 @@ google: &google
   NAME: Google
   VERSION: '2.0'
   CALLBACK_URL: 
-  CLIENT_KEY:
+  CLIENT_ID:
   CLIENT_SECRET:
   BASE_URL: https://www.googleapis.com/oauth2/v1/
   AUTHORIZATION_URL: https://accounts.google.com/o/oauth2/auth

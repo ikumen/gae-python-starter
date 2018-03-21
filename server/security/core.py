@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from functools import wraps
 from flask import Flask, session, jsonify
 from requests_oauthlib import OAuth2Session
-from . import Constants
+from . import constants
 
 
 class UnauthorizedException(Exception):
@@ -50,6 +50,13 @@ class OAuthClient(object):
         """Parses the token response from provider."""
         pass
 
+    @abstractmethod
+    def post_parse_token_response(self, oauth_resp):
+        """Called user has been authenticated and token from OAuth provider
+        has been parsed.
+        """
+        pass
+
     def fetch_parse_token(self, **kwargs):
         """Performs the fetch and parse sequence, delegating
         each step to client implementations.
@@ -70,18 +77,18 @@ class OAuth2Client(OAuthClient):
     def __init__(self, config, state=None, token=None, **kwargs):
         super(OAuth2Client, self).__init__(config, state=state, token=token)
         self.session = OAuth2Session(
-                config.get(Constants.K_OAUTH_CLIENT_ID),
+                config.get(constants.K_OAUTH_CLIENT_ID),
                 scope=config.get('SCOPE'),
                 state=state,
                 token=token,
-                redirect_uri=config.get(Constants.K_OAUTH_CALLBACK_URL), 
+                redirect_uri=config.get(constants.K_OAUTH_CALLBACK_URL), 
                 **kwargs)
 
     def authorize(self, **kwargs):
         """Starts an OAuth2 specific authorization dance.
         """
         return self.session.authorization_url(
-            self.config.get(Constants.K_OAUTH_AUTH_URL),
+            self.config.get(constants.K_OAUTH_AUTH_URL),
             access_type=self.config.get('ACCESS_TYPE', None),
             approval_prompt='force',
             include_granted_scopes='true')
@@ -90,8 +97,8 @@ class OAuth2Client(OAuthClient):
         """Fetch the OAuth tokens from configured provider.
         """
         return self.session.fetch_token(
-            self.config.get(Constants.K_OAUTH_TOKEN_URL),
-            client_secret=self.config.get(Constants.K_OAUTH_CLIENT_SECRET),
+            self.config.get(constants.K_OAUTH_TOKEN_URL),
+            client_secret=self.config.get(constants.K_OAUTH_CLIENT_SECRET),
             authorization_response=oauth_resp)
 
     def post_construct(self, **kwargs):

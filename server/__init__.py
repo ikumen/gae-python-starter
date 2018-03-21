@@ -8,7 +8,6 @@ from .helpers import JSONSerializableEncoder
 from .config import load_settings, GAEDataStoreConfiguration
 from .security import oauth_factory
 from . import models
-from . import constants
 
 
 def _register_blueprints(app, pkg_name, pkg_path):

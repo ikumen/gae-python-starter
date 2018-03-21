@@ -29,10 +29,10 @@ class OAuthClientFactory(object):
         # config only takes upper case configs), but we'll normalize the client
         # id values to lower case so it's consistent throughout codebase
         if self.K_CLIENTS in config:
-            clients = {}
+            client_configs = {}
             for pid in config[self.K_CLIENTS]:
-                clients[pid.lower()] = config[self.K_CLIENTS][pid]
-            self.config[self.K_CLIENTS] = clients
+                client_configs[pid.lower()] = config[self.K_CLIENTS][pid]
+            self.config[self.K_CLIENTS] = client_configs
 
         # TODO: encapsulate
         # Search the security.clients folder for client implementations, load them
@@ -43,14 +43,14 @@ class OAuthClientFactory(object):
             for name, obj in inspect.getmembers(module):
                 # OAuthClient subclasses have following name pattern *OAuthClient, let's
                 # store all the names in lower case to make it consistent throughout
-                provider_id = name[:-11].lower()
+                pid = name[:-11].lower()
                 # Make sure we have a subclass of OAuthClient
-                if provider_id in self.config[self.K_CLIENTS] \
+                if pid in self.config[self.K_CLIENTS] \
                   and inspect.isclass(obj) \
                   and issubclass(obj, OAuth2Client) \
                   and obj is not OAuth2Client:
                     # Save reference of id with implementing class
-                    self._register_client_class(provider_id, obj)
+                    self._register_client_class(pid, obj)
 
 
     def _register_client_class(self, provider_id, client_class):

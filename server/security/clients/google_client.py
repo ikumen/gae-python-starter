@@ -2,7 +2,7 @@ import jwt
 
 from ..core import OAuth2Client, UnauthorizedException
 
-class GoogleClient(OAuth2Client):
+class GoogleOAuthClient(OAuth2Client):
     """OAuthClient implementation that interacts with Google OAuth services.
     """
     def parse_token_response(self, oauth_resp):
@@ -20,4 +20,7 @@ class GoogleClient(OAuth2Client):
             
         raise UnauthorizedException('Failed to parse response from provider: {}'\
             .format(self.config.get('ID')))
+    
+    def post_parse_token_response(self, oauth_resp):
+        pass
                 

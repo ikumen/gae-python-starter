@@ -1,7 +1,6 @@
 import os
 
 from flask import Blueprint, render_template, current_app, redirect, session, request
-from .. import constants
 from .. import security
 
 bp = Blueprint('home', __name__)
