@@ -117,6 +117,7 @@ class AbstractModel(JSONSerializable, ndb.Model):
         """Save this instance to datastore.
         """
         self.put()
+        return self
 
     def delete(self):
         """Delete this instance from datastore.
@@ -133,14 +134,56 @@ class Setting(AbstractModel):
     value = ndb.StringProperty()
 
 class OAuth(AbstractModel):
-    source = ndb.StringProperty()
+    """Class representing OAuth token, and User group (e.g. parent=User)
+    """
+    # Unique identifier from OAuth provider
+    identity = ndb.StringProperty(indexed=True, required=True)
+    # Identity of OAuth provider (e.g. google)
+    provider_id = ndb.StringProperty(indexed=True, required=True)
+    # Dict of token type, refresh token, and access token
     token = ndb.JsonProperty()
+    created_at = ndb.DateTimeProperty()
 
-class SigninOAuth(OAuth):
-    signed_in_at = ndb.DateTimeProperty()
+    def update_token(self, token):
+        self.token = token
+        self.save()
+
+    @classmethod
+    def find_by_identity(cls, identity, provider_id):
+        """Find an instance of OAuth with given identity and provider.
+
+        @param identity identifier unique to given provider
+        @param provider_id id of OAuth provider
+        """
+        return cls.query(cls.identity == identity, cls.provider_id == provider_id).get()
+        
+    @classmethod
+    def _preprocess_new_params(cls, **kwargs):
+        """Make sure all OAuth instances are ancestors of User (ie, children).
+        """
+        if 'parent' not in kwargs:
+            raise ValueError('OAuth requires a parent (eg, belongs to a User)')
+        return super(OAuth, cls)._preprocess_new_params(**kwargs)
+
 
 class User(AbstractModel):
     name = ndb.StringProperty()
     email = ndb.StringProperty()
     created_at = ndb.DateTimeProperty(auto_now_add=True)
-    signin_oauths = ndb.StructuredProperty(SigninOAuth, repeated=True)
+
+    @classmethod
+    def get_or_create_by_oauth_info(cls, oauth_info):
+        oauth = OAuth.find_by_identity(oauth_info['identity'], oauth_info['provider_id'])
+        if oauth is None:
+            return ndb.transaction(lambda: cls._create_user_with_oauth(oauth_info))
+        else:
+            ndb.transaction(oauth.update_token(oauth_info['token']))
+            return oauth.key.parent().get()
+
+    @classmethod   
+    def _create_user_with_oauth(cls, oauth_info):
+        oauth = OAuth.create(parent=cls.create().key, **oauth_info)
+        return oauth.key.parent().get()
+
+ 
+

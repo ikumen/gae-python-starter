@@ -89,7 +89,7 @@ class OAuthClientFactory(object):
         @param provider_id provider id (e.g. google)
         """
         cls = self._get_client_class(provider_id)
-        return cls(self._get_client_config(provider_id),token=token, state=state)
+        return cls(provider_id, self._get_client_config(provider_id),token=token, state=state)
 
         
 

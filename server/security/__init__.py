@@ -69,7 +69,7 @@ def end_oauth_signin(fn):
        OAuth client
      - results of the OAuth signin flow (e.g. access token, user info) 
        will be available to decorated function as a keyword argument
-       'oauth_result'
+       'oauth_info'
     """
     @wraps(fn)
     def decorator(*args, **kwargs):
@@ -78,9 +78,9 @@ def end_oauth_signin(fn):
             state=session.get(constants.K_STATE_SESSION))
         try:
             # Parse out user info from OAuth provider response
-            oauth_result = oauth_client.fetch_parse_token(oauth_resp=request.url)
-            # Send back parse oauth results to caller
-            kwargs[constants.K_OAUTH_RESULT] = oauth_result
+            oauth_info = oauth_client.fetch_parse_token(oauth_resp=request.url)
+            # Send back parse oauth info to caller
+            kwargs['oauth_info'] = oauth_info
             fn(*args, **kwargs)
         except(UnauthorizedException) as e:
             logging.warn(e)

@@ -6,6 +6,7 @@ from functools import wraps
 from flask import Flask, session, jsonify
 from requests_oauthlib import OAuth2Session
 from . import constants
+from ..models import User, OAuth
 
 
 class UnauthorizedException(Exception):
@@ -25,7 +26,8 @@ class OAuthClient(object):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, config, **kwargs):
+    def __init__(self, provider_id, config, **kwargs):
+        self.provider_id = provider_id
         self.config = config
         self.token = kwargs.get('token')
         self.post_construct(**kwargs)
@@ -50,13 +52,6 @@ class OAuthClient(object):
         """Parses the token response from provider."""
         pass
 
-    @abstractmethod
-    def post_parse_token_response(self, oauth_resp):
-        """Called user has been authenticated and token from OAuth provider
-        has been parsed.
-        """
-        pass
-
     def fetch_parse_token(self, **kwargs):
         """Performs the fetch and parse sequence, delegating
         each step to client implementations.
@@ -74,8 +69,8 @@ class OAuth2Client(OAuthClient):
     Actual work is done by OAuth2Session.
     """
 
-    def __init__(self, config, state=None, token=None, **kwargs):
-        super(OAuth2Client, self).__init__(config, state=state, token=token)
+    def __init__(self, provider_id, config, state=None, token=None, **kwargs):
+        super(OAuth2Client, self).__init__(provider_id, config, state=state, token=token)
         self.session = OAuth2Session(
                 config.get(constants.K_OAUTH_CLIENT_ID),
                 scope=config.get('SCOPE'),
@@ -103,3 +98,4 @@ class OAuth2Client(OAuthClient):
 
     def post_construct(self, **kwargs):
         pass
+
